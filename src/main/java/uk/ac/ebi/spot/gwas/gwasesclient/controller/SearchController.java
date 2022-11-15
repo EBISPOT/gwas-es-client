@@ -24,7 +24,8 @@ public class SearchController {
     @GetMapping
     List<Sumstats> findSumstats(@RequestParam(required = false) String hm_rsid, @RequestParam(required = false) String hm_variant_id,
                                 @RequestParam(required = false) String pos, @RequestParam(required = false) String study_accession,
-                                @RequestParam(required = false) String p_value_threshold, @RequestParam(required = false) String phenotype) throws IOException {
-        return sumstatsService.search(hm_rsid, hm_variant_id, pos, study_accession, p_value_threshold, phenotype);
+                                @RequestParam(required = false) String p_value_threshold, @RequestParam(required = false) String phenotype,
+                                @RequestParam(required = false) Integer size, @RequestParam(required = false) Integer from) throws IOException {
+        return sumstatsService.search(hm_rsid, hm_variant_id, pos, study_accession, p_value_threshold, phenotype, size, from);
     }
 }

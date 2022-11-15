@@ -1,10 +1,8 @@
 package uk.ac.ebi.spot.gwas.gwasesclient.connector;
 
 import co.elastic.clients.elasticsearch.ElasticsearchClient;
-import co.elastic.clients.elasticsearch._types.query_dsl.Query;
-import co.elastic.clients.elasticsearch._types.query_dsl.QueryVariant;
-import co.elastic.clients.elasticsearch._types.query_dsl.RangeQuery;
-import co.elastic.clients.elasticsearch._types.query_dsl.TermQuery;
+import co.elastic.clients.elasticsearch._types.FieldValue;
+import co.elastic.clients.elasticsearch._types.query_dsl.*;
 import co.elastic.clients.elasticsearch.core.GetResponse;
 import co.elastic.clients.elasticsearch.core.SearchResponse;
 import co.elastic.clients.elasticsearch.core.search.Hit;
@@ -32,14 +30,15 @@ public class EsClientConnector {
     }
 
     public List<Sumstats> fetchSumstats(String hm_rsid, String hm_variant_id, String hm_chrom, String hm_pos,
-                                        String study_accession, String p_value, String phenotype) throws IOException {
-        List<Query> queries = prepareQueryList(hm_rsid, hm_variant_id, hm_chrom, hm_pos, study_accession, p_value, phenotype);
+                                        List<String> study_accession, String p_value, Integer size, Integer from) throws IOException {
+        List<Query> queries = prepareQueryList(hm_rsid, hm_variant_id, hm_chrom, hm_pos, study_accession, p_value);
         queries.forEach(query -> {
             System.out.println(query.toString());
         });
         SearchResponse<Sumstats> sumstatsSearchResponse = elasticsearchClient.search(req ->
                         req.index(index)
-                                .size(10)
+                                .size(size)
+                                .from(from)
                                 .query(query ->
                                         query.bool(bool ->
                                                 bool.must(queries)))
@@ -47,7 +46,7 @@ public class EsClientConnector {
         return sumstatsSearchResponse.hits().hits().stream().map(Hit::source).collect(Collectors.toList());
     }
 
-    private List<Query> prepareQueryList(String hm_rsid, String hm_variant_id, String hm_chrom, String hm_pos, String study_accession, String p_value, String phenotype) {
+    private List<Query> prepareQueryList(String hm_rsid, String hm_variant_id, String hm_chrom, String hm_pos, List<String> study_accession, String p_value) {
         Map<String, Object> conditionMap = new HashMap<>();
         conditionMap.put("hm_rsid", hm_rsid);
         conditionMap.put("hm_variant_id", hm_variant_id);
@@ -55,7 +54,6 @@ public class EsClientConnector {
         conditionMap.put("hm_pos", hm_pos);
         conditionMap.put("study_accession", study_accession);
         conditionMap.put("p_value", p_value);
-        // conditionMap.put("phenotype", phenotype);
         return conditionMap.entrySet()
                 .stream()
                 .filter(entry->!ObjectUtils.isEmpty(entry.getValue()))
@@ -70,6 +68,11 @@ public class EsClientConnector {
                     .field("p_value")
                     .lte(JsonData.of(Double.parseDouble(value.toString())))
                     .build();
+        }
+        else if (field.equals("study_accession")) {
+            List<String> gcsts = (List<String>) value;
+            List<FieldValue> termValues = gcsts.stream().map(FieldValue::of).collect(Collectors.toList());
+            queryVariant = new TermsQuery.Builder().field(field).terms(tf -> tf.value(termValues)).build();
         }
         else if (field.equals("hm_chrom")) {
             queryVariant = new TermQuery.Builder().field(field).value(Integer.parseInt(value.toString())).build();

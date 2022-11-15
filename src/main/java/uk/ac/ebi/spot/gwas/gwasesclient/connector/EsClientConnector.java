@@ -7,6 +7,8 @@ import co.elastic.clients.elasticsearch.core.GetResponse;
 import co.elastic.clients.elasticsearch.core.SearchResponse;
 import co.elastic.clients.elasticsearch.core.search.Hit;
 import co.elastic.clients.json.JsonData;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 import org.springframework.util.ObjectUtils;
 import uk.ac.ebi.spot.gwas.gwasesclient.model.Sumstats;
@@ -20,6 +22,7 @@ import java.util.stream.Collectors;
 @Component
 public class EsClientConnector {
 
+    private static final Logger log = LoggerFactory.getLogger(EsClientConnector.class);
     private final ElasticsearchClient elasticsearchClient;
 
     private final String index = ".ds-gwas-mixed-dev-2022.10.27-000001";
@@ -33,7 +36,7 @@ public class EsClientConnector {
                                         List<String> study_accession, String p_value, Integer size, Integer from) throws IOException {
         List<Query> queries = prepareQueryList(hm_rsid, hm_variant_id, hm_chrom, hm_pos, study_accession, p_value);
         queries.forEach(query -> {
-            System.out.println(query.toString());
+            log.info(query.toString());
         });
         SearchResponse<Sumstats> sumstatsSearchResponse = elasticsearchClient.search(req ->
                         req.index(index)

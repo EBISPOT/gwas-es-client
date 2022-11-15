@@ -29,6 +29,6 @@
         <appender-ref ref="Console"/>
     </logger>
 
-    <root level="OFF">
+    <root level="INFO">
     </root>
 </configuration>

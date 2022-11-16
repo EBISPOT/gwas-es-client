@@ -1,4 +1,4 @@
-package uk.ac.ebi.spot.gwas.gwasesclient.model;
+package uk.ac.ebi.spot.gwas.gwasesclient.model.gwasrestapi;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;

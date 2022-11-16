@@ -32,21 +32,21 @@ public class EsClientConnector {
         // System.out.println(fetchSumstatsById("Q1BRGoQBGEkvbfUzm_SJ"));
     }
 
-    public List<Sumstats> fetchSumstats(String hm_rsid, String hm_variant_id, String hm_chrom, String hm_pos,
+    public SearchResponse<Sumstats> fetchSumstats(String hm_rsid, String hm_variant_id, String hm_chrom, String hm_pos,
                                         List<String> study_accession, String p_value, Integer size, Integer from) throws IOException {
         List<Query> queries = prepareQueryList(hm_rsid, hm_variant_id, hm_chrom, hm_pos, study_accession, p_value);
         queries.forEach(query -> {
             log.info(query.toString());
         });
-        SearchResponse<Sumstats> sumstatsSearchResponse = elasticsearchClient.search(req ->
+        return elasticsearchClient.search(req ->
                         req.index(index)
                                 .size(size)
                                 .from(from)
                                 .query(query ->
                                         query.bool(bool ->
                                                 bool.must(queries)))
+                                .trackTotalHits(t -> t.enabled(true))
                 , Sumstats.class);
-        return sumstatsSearchResponse.hits().hits().stream().map(Hit::source).collect(Collectors.toList());
     }
 
     private List<Query> prepareQueryList(String hm_rsid, String hm_variant_id, String hm_chrom, String hm_pos, List<String> study_accession, String p_value) {
